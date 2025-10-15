@@ -5,39 +5,42 @@ import java.util.List;
 public class Filme {
 
 	private String id;
-	private String nome;
+	private String titulo;
 	private String ano;
-	private List<String> generos;
+	private String diretor;
+	private List<String> genero;
 	private String sinopse;
 	private Object avaliacoes;
 	private String nota;
 	private String qtd_avaliacoes;
 	
 
-    public Filme(String id, String nome, String ano, List<String> generos, String sinopse, Object avaliacoes, String nota, String qtd_avaliacoes) {
-        this.nome = nome;
+    public Filme(String id, String titulo, String ano, List<String> generos, String sinopse, Object avaliacoes, String nota, String qtd_avaliacoes) {
+        this.titulo = titulo;
         this.ano = ano;
         this.sinopse = sinopse;
-		this.generos = generos;
+		this.genero = generos;
 		this.avaliacoes = avaliacoes;
 		this.id = id;
 		this.nota = nota;
 		this.qtd_avaliacoes = qtd_avaliacoes;
+		
     }
-    public Filme(String id, String nome, String ano, List<String> generos, String sinopse, String nota, String qtd_avaliacoes) {
-        this.nome = nome;
+    public Filme(String id, String nome, String ano, List<String> generos, String sinopse, String nota, String qtd_avaliacoes, String diretor) {
+        this.titulo = nome;
         this.ano = ano;
         this.sinopse = sinopse;
-		this.generos = generos;
+		this.genero = generos;
 		this.id = id;
 		this.nota = nota;
 		this.qtd_avaliacoes = qtd_avaliacoes;
+		this.diretor = diretor;
     }
     public Filme(String nome, String ano, List<String> generos, String sinopse) {
-        this.nome = nome;
+        this.titulo = nome;
         this.ano = ano;
         this.sinopse = sinopse;
-		this.generos = generos;
+		this.genero = generos;
     }
 
 	public String getId() {
@@ -46,11 +49,11 @@ public class Filme {
 	public void setId(String id) {
 		this.id = id;
 	}
-	public String getNome() {
-		return nome;
+	public String getTitulo() {
+		return titulo;
 	}
-	public void setNome(String nome) {
-		this.nome = nome;
+	public void setTitulo(String titulo) {
+		this.titulo = titulo;
 	}
 	public String getAno() {
 		return ano;
@@ -68,6 +71,6 @@ public class Filme {
 	@Override
     public String toString() {
         // Exemplo: "Interestelar (2014) - Nota: 0.0"
-        return this.nome + " (" + this.ano + ") - Nota: " + this.nota;
+        return this.titulo + " (" + this.ano + ") - Nota: " + this.nota;
     }
 }

@@ -31,8 +31,8 @@ public class ClientHandler implements Runnable {
         System.out.println("Nova thread para o cliente:"+ clientSocket.getInetAddress().getHostAddress());
         
         try (
-            BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-            PrintWriter escritor = new PrintWriter(clientSocket.getOutputStream(),true);
+            BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream(), "UTF-8"));
+            PrintWriter escritor = new PrintWriter(new OutputStreamWriter(clientSocket.getOutputStream(), "UTF-8"), true);
             
         ) {
             String json;
@@ -41,25 +41,32 @@ public class ClientHandler implements Runnable {
 
             while ((json = reader.readLine()) != null) {
 
+            	System.out.println(json);
                 Requisicao msgRecebida = gson.fromJson(json, Requisicao.class);
+                System.out.println(json);
                 switch (msgRecebida.getOperacao()) {
                     case "CRIAR_USUARIO": {
-                        Login userCreate = gson.fromJson(json, Login.class);
-
+                    	String userObj = gson.toJson(msgRecebida.getUsuario());
+                    	
+                        Usuario userCreate = gson.fromJson(userObj, Usuario.class);
+                        
+//                      String ReqObj = gson.toJson(userCreate.getDado)
+//                        System.out.println(userCreate.toString());
                         Resposta resposta = new Resposta("");
 
-                        String res = db.CriarUsuario(userCreate.getUsuario(), userCreate.getSenha());
+                        String res = db.CriarUsuario(userCreate.getNome(), userCreate.getSenha());
 
                         resposta.setStatus(res);
                         String jsonResposta = gson.toJson(resposta);
                         escritor.println(jsonResposta);
                         System.out.println("Enviado: " + jsonResposta);
+
                         break;
                     }
                     case "LOGIN": {
                         
                         Login userLogin = gson.fromJson(json, Login.class);
-
+                        System.out.println(userLogin.toString());
                         Resposta resposta = new Resposta("");
                         
                         resposta = db.Login(userLogin.getUsuario(), userLogin.getSenha());
@@ -163,13 +170,11 @@ public class ClientHandler implements Runnable {
                         DecodedJWT jwt = TokenUtil.decodeToken(tokenString);
                         String usuarioNome = jwt.getSubject();
 
-                        Usuario user = new Usuario();
-                        user.setNome(usuarioNome);
-
-                        resposta.setStatus("200");
-                        resposta.setUsuario(user);
+                        Login user = new Login();
+                        user.setUsuario(usuarioNome);
+                        user.setOperacao("200");
                         
-                        String reString = gson.toJson(resposta);
+                        String reString = gson.toJson(user);
 
                         System.out.println(reString);
                         escritor.println(reString);

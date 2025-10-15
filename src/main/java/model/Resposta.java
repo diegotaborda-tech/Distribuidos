@@ -20,8 +20,9 @@ public class Resposta {
     private String token;
     private Object dados; // Usar Object permite que este campo contenha qualquer coisa
     private Object usuario;
-    private Object filme;
+    private Object filmes;
     private Object review;
+    
 
     public Resposta(String status, Object dados) {
         this.status = status;
@@ -35,7 +36,7 @@ public class Resposta {
         } else if (tipo.equals("review")) {
             this.review = dados;
         } else if (tipo.equals("filme")) {
-            this.filme = dados;
+            this.filmes = dados;
         }
     }
 

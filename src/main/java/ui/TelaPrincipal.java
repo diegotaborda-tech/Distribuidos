@@ -184,14 +184,14 @@ public class TelaPrincipal extends JFrame {
                     
                     String resJson = NetworkUtil.sendJson(socket, reqJson, gson);
                     
-                    Resposta res = gson.fromJson(resJson, Resposta.class);
-                    Object usuario = res.getUsuario();
-                    String strUser = gson.toJson(usuario);
+                    Login res = gson.fromJson(resJson, Login.class);
+                    //Object usuario = res.getUsuario();
+                    // strUser = gson.toJson(usuario);
                     
-                    Usuario user = gson.fromJson(strUser, Usuario.class);
+                    //Usuario user = gson.fromJson(strUser, Usuario.class);
                     
                     SwingUtilities.invokeLater(() ->
-                        JOptionPane.showMessageDialog(this, "Usuário logado: " + user.getNome(), "Informações do Usuário",
+                        JOptionPane.showMessageDialog(this, "Usuário logado: " + res.getUsuario(), "Informações do Usuário",
                         JOptionPane.INFORMATION_MESSAGE));
 
                 } catch (Exception e) {
@@ -243,8 +243,8 @@ public class TelaPrincipal extends JFrame {
     private void buscarDados() {
         String token = SessaoUsuario.getInstance().getToken();
 
-        Requisicao reqFilmes = new Requisicao("LISTAR_FILMES", token);
-        Requisicao reqReviews = new Requisicao("LISTAR_REVIEWS_USUARIO", token);
+        Requisicao reqFilmes = new Requisicao("LISTAR_FILMES");
+        Requisicao reqReviews = new Requisicao("LISTAR_REVIEWS_USUARIO");
         String jsonReqFilmes = gson.toJson(reqFilmes);
         String jsonReqReviews = gson.toJson(reqReviews);
 
@@ -258,7 +258,7 @@ public class TelaPrincipal extends JFrame {
 
                 // Busca Filmes
                 String respostaJsonFilmes = NetworkUtil.sendJson(socket, jsonReqFilmes, gson);
-                Resposta respostaFilmes = gson.fromJson(respostaJsonFilmes, Resposta.class);
+                RespostaFilmes respostaFilmes = gson.fromJson(respostaJsonFilmes, RespostaFilmes.class);
 
                 // Busca Reviews
                 String respostaJsonReviews = NetworkUtil.sendJson(socket, jsonReqReviews, gson);
@@ -266,11 +266,7 @@ public class TelaPrincipal extends JFrame {
 
                 // Processa as respostas
                 if (respostaFilmes != null && "200".equals(respostaFilmes.getStatus())) {
-                    String dadosJsonFilmes = gson.toJson(respostaFilmes.getDados());
-                    java.lang.reflect.Type tipoListaFilmes = new TypeToken<List<Filme>>() {
-                    }.getType();
-                    List<Filme> filmesRecebidos = gson.fromJson(dadosJsonFilmes, tipoListaFilmes);
-
+                    List<Filme> filmesRecebidos = respostaFilmes.getFilmes();
                     SwingUtilities.invokeLater(() -> {
                         modeloListaFilmes.clear();
                         for (Filme filme : filmesRecebidos) {
@@ -307,4 +303,12 @@ public class TelaPrincipal extends JFrame {
             dlg.setVisible(true);
         });
     }
+}
+
+class RespostaFilmes {
+    private String status;
+    private List<Filme> filmes;
+
+    public String getStatus() { return status; }
+    public List<Filme> getFilmes() { return filmes; }
 }

@@ -7,7 +7,7 @@ import java.net.Socket;
 public class Servidor {
     public static void main(String[] args) {
         System.out.println("Servidor multithread iniciado. Aguardando conexões...");
-        try (ServerSocket serverSocket = new ServerSocket(12345)) {
+        try (ServerSocket serverSocket = new ServerSocket(20000)) {
             // Loop infinito para aceitar conexões de múltiplos clientes
             while (true) {
                 Socket clientSocket = serverSocket.accept();

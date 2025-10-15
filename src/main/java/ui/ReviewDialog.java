@@ -23,7 +23,7 @@ public class ReviewDialog extends JDialog {
     private JTextField txtTitulo; // NOVO: Campo de texto para o título
 
     public ReviewDialog(JFrame owner, Filme filme, Socket socket, Gson gson) {
-        super(owner, "Review - " + filme.getNome(), true);
+        super(owner, "Review - " + filme.getTitulo(), true);
         this.filme = filme;
         this.socket = socket;
         this.gson = gson;
@@ -37,7 +37,7 @@ public class ReviewDialog extends JDialog {
         setLayout(new BorderLayout(8, 8));
 
         // Topo: Título do filme
-        JLabel lblTitle = new JLabel(filme.getNome() + " (" + filme.getAno() + ")");
+        JLabel lblTitle = new JLabel(filme.getTitulo() + " (" + filme.getAno() + ")");
         lblTitle.setFont(lblTitle.getFont().deriveFont(Font.BOLD, 18f));
         lblTitle.setBorder(BorderFactory.createEmptyBorder(5, 5, 0, 5));
         add(lblTitle, BorderLayout.NORTH);

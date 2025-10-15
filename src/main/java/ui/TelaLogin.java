@@ -3,8 +3,10 @@ package ui;
 import com.google.gson.Gson;
 import model.Login;
 import model.NetworkUtil;
+import model.Requisicao;
 import model.Resposta;
 import model.SessaoUsuario;
+import model.Usuario;
 
 import javax.swing.*;
 import java.awt.*;
@@ -66,12 +68,13 @@ public class TelaLogin extends JFrame {
     }
 
     private void criarUsuario() {
-        String usuario = campoUsuario.getText();
+        String login = campoUsuario.getText();
         String senha = new String(campoSenha.getPassword());
 
         setBotoesAtivados(false, "Criando...");
 
-        Login criarLogin = new Login(usuario, senha, "CRIAR_USUARIO");
+        Usuario usuario = new Usuario(login, senha);
+        Requisicao criarLogin = new Requisicao("CRIAR_USUARIO", usuario, "usuario");
         String jsonReq = gson.toJson(criarLogin);
 
         new Thread(() -> {

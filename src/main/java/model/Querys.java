@@ -95,10 +95,10 @@ public class Querys {
     }
 
     public Resposta Login(String usuario, String senha) {
-        if ((usuario == null || senha == null) || (usuario.isEmpty() || senha.isEmpty())) {
-            Resposta res = new Resposta("400");
-            return res; // Bad Request
-        }
+        // if ((usuario == null || senha == null) || (usuario.isEmpty() || senha.isEmpty())) {
+        //     Resposta res = new Resposta("400");
+        //     return res; // Bad Request
+        // }
         System.out.println("Antes da verificação");
         String verificacao = VerificarCredenciais(usuario, senha, "LOGIN");
         System.out.println(verificacao);
@@ -139,6 +139,7 @@ public class Querys {
                 List<String> listaDeGeneros = new ArrayList<>();
                 double nota = rs.getDouble("nota");
                 int qtd_avaliacoes = rs.getInt("qtd_avaliacoes");
+                String diretor = rs.getString("diretor");
                 if (generosComoString != null && !generosComoString.isEmpty()) {
                     // 2. Divide a string pela vírgula, criando um array
                     String[] generosArray = generosComoString.split(",");
@@ -150,10 +151,10 @@ public class Querys {
                 String idStr = String.valueOf(id);
                 String notaStr = String.valueOf(nota);
                 String qtdStr = String.valueOf(qtd_avaliacoes);
-                Filme filme = new Filme(idStr, titulo, ano, listaDeGeneros, sinopse, notaStr, qtdStr);
+                Filme filme = new Filme(idStr, titulo, ano, listaDeGeneros, sinopse, notaStr, qtdStr, diretor);
                 filmes.add(filme);
             }
-            return new Resposta("200", filmes);
+            return new Resposta("200", filmes, "filme");
         } catch (Exception e) {
             System.err.println("Erro no Banco: " + e.getMessage());
             return new Resposta("500");
