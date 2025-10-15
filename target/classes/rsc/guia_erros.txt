@@ -1,0 +1,11 @@
+400;Bad Request;O id fornecido não é válido (ex: está vazio ou no formato incorreto).
+401;Unauthorized: invalid token;Credenciais inválidas
+403;Forbidden;Tentou acessar/excluir um recurso que não lhe pertence ou para o qual não tem privilégios de administrador.
+404;Not found;O id do filme/review/usuário não existe.
+409;Already exists;Instância já existe
+410;Gone;Este erro é mais forte que um 404 (Not Found). Ele indica que o recurso que você está tentando acessar existiu no passado, mas foi intencionalmente removido e não voltará.
+411;Length Required;O servidor se recusa a aceitar a requisição porque ela não especifica o tamanho do seu conteúdo no cabeçalho Content-Length. O servidor precisa saber o quão grande é o pacote de dados que está chegando.
+412;Precondition Failed;
+413;Payload Too Large;A requisição que o cliente está enviando é maior do que o servidor está disposto ou configurado para processar.
+418;I'm a teapot;Ele indica que o servidor se recusa a preparar café porque ele é, permanentemente, uma chaleira
+422;Unprocessable Entity;Dados faltantes ou fora do padrão
