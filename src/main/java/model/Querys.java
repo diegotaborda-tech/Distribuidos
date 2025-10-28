@@ -47,7 +47,7 @@ public class Querys {
                 if (rs2.next()) {
                     return "200"; // Login e senha encontrados
                 } else {
-                    return "401"; // Usuario Não encontrado
+                    return "403"; // Usuario Não encontrado
                 }
             }} else{
             try (PreparedStatement stmt1 = conn.prepareStatement(sql1)) {
@@ -69,8 +69,12 @@ public class Querys {
 
     public String CriarUsuario(String usuario, String senha) {
         String res = VerificarCredenciais(usuario, senha, "CRIAR_USUARIO");
+        if (senha.length() < 3) {
+            return "405";
+        }
         try {
             if (res == "409" || res == "500") {
+                
                 return res;
             } else {
                 try (Connection conn = DriverManager.getConnection(urlBanco)) {

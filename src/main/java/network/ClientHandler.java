@@ -57,6 +57,14 @@ public class ClientHandler implements Runnable {
                         String res = db.CriarUsuario(userCreate.getNome(), userCreate.getSenha());
 
                         resposta.setStatus(res);
+                        if (res.equals("201")) {
+                            resposta.setMensagem("Sucesso: Usuário criado com sucesso");
+                        } else if (res.equals("409")) {
+                            resposta.setMensagem("Erro: Recurso ja existe");
+                        } else if (res.equals("405")) {
+                            resposta.setMensagem("Erro: Campos inválidos, verifique o tipo e quantidade de caracteres");
+                        }
+                        
                         String jsonResposta = gson.toJson(resposta);
                         escritor.println(jsonResposta);
                         System.out.println("Enviado: " + jsonResposta);
