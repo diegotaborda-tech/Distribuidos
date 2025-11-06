@@ -1,13 +1,11 @@
 package model;
 
 public class Usuario {
+    
     @Override
     public String toString() {
-        return "Usuario{" +
-                "id='" + id + '\'' +
-                ", nome='" + nome + '\'' +
-                ", senha='" + senha + '\'' +
-                '}';
+        // É assim que o usuário será exibido na JList
+        return "ID: " + id + "  |  Nome: " + nome;
     }
     private String id;
     private String nome;

@@ -4,6 +4,7 @@ import com.auth0.jwt.interfaces.DecodedJWT;
 import com.google.gson.Gson; // Importar Gson
 
 import ch.qos.logback.core.subst.Token;
+import model.Filme;
 import model.Login;
 import model.Querys;
 import model.Requisicao;
@@ -27,13 +28,15 @@ public class ClientHandler implements Runnable {
 
     @Override
     public void run() {
-         
-        System.out.println("Nova thread para o cliente:"+ clientSocket.getInetAddress().getHostAddress());
-        
+
+        System.out.println("Nova thread para o cliente:" + clientSocket.getInetAddress().getHostAddress());
+
         try (
-            BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream(), "UTF-8"));
-            PrintWriter escritor = new PrintWriter(new OutputStreamWriter(clientSocket.getOutputStream(), "UTF-8"), true);
-            
+                BufferedReader reader = new BufferedReader(
+                        new InputStreamReader(clientSocket.getInputStream(), "UTF-8"));
+                PrintWriter escritor = new PrintWriter(new OutputStreamWriter(clientSocket.getOutputStream(), "UTF-8"),
+                        true);
+
         ) {
             String json;
             Querys db = new Querys();
@@ -41,17 +44,17 @@ public class ClientHandler implements Runnable {
 
             while ((json = reader.readLine()) != null) {
 
-            	System.out.println("Recebido: " + json);
+                System.out.println("Recebido: " + json);
                 Requisicao msgRecebida = gson.fromJson(json, Requisicao.class);
-                
+
                 switch (msgRecebida.getOperacao()) {
                     case "CRIAR_USUARIO": {
-                    	String userObj = gson.toJson(msgRecebida.getUsuario());
-                    	
+                        String userObj = gson.toJson(msgRecebida.getUsuario());
+
                         Usuario userCreate = gson.fromJson(userObj, Usuario.class);
-                        
-//                      String ReqObj = gson.toJson(userCreate.getDado)
-//                        System.out.println(userCreate.toString());
+
+                        // String ReqObj = gson.toJson(userCreate.getDado)
+                        // System.out.println(userCreate.toString());
                         Resposta resposta = new Resposta("");
 
                         String res = db.CriarUsuario(userCreate.getNome(), userCreate.getSenha());
@@ -64,7 +67,7 @@ public class ClientHandler implements Runnable {
                         } else if (res.equals("405")) {
                             resposta.setMensagem("Erro: Campos inválidos, verifique o tipo e quantidade de caracteres");
                         }
-                        
+
                         String jsonResposta = gson.toJson(resposta);
                         escritor.println(jsonResposta);
                         System.out.println("Enviado: " + jsonResposta);
@@ -72,14 +75,14 @@ public class ClientHandler implements Runnable {
                         break;
                     }
                     case "LOGIN": {
-                        
+
                         Login userLogin = gson.fromJson(json, Login.class);
-                        //System.out.println(userLogin.toString());
+                        // System.out.println(userLogin.toString());
                         Resposta resposta = new Resposta("");
-                        
+
                         resposta = db.Login(userLogin.getUsuario(), userLogin.getSenha());
 
-                        //resposta.setStatus(res);
+                        // resposta.setStatus(res);
                         String jsonResposta = gson.toJson(resposta);
                         escritor.println(jsonResposta);
                         System.out.println("Enviado: " + jsonResposta);
@@ -87,19 +90,19 @@ public class ClientHandler implements Runnable {
                         break;
                     }
                     case "LISTAR_FILMES": {
-                        
-                        //System.out.println("teste");
+
+                        // System.out.println("teste");
                         Resposta resposta = new Resposta();
                         resposta = db.listarFilmes();
 
-                        //resposta.setStatus(res);
+                        // resposta.setStatus(res);
                         String jsonResposta = gson.toJson(resposta);
                         escritor.println(jsonResposta);
                         System.out.println("Enviado: " + jsonResposta);
                         break;
                     }
                     case "LISTAR_REVIEWS_USUARIO": {
-                        
+
                         String tokenString = msgRecebida.getToken();
                         Resposta resposta = new Resposta();
 
@@ -110,16 +113,15 @@ public class ClientHandler implements Runnable {
                             resposta = db.listarReviews();
                         }
 
-
-                        //resposta.setStatus(res);
+                        // resposta.setStatus(res);
                         String jsonResposta = gson.toJson(resposta);
                         escritor.println(jsonResposta);
                         System.out.println("Enviado: " + jsonResposta);
                         break;
                     }
                     case "CRIAR_REVIEW": {
-                        
-                        Requisicao req = gson.fromJson(json, Requisicao.class); 
+
+                        Requisicao req = gson.fromJson(json, Requisicao.class);
                         Object dados = req.getReview();
                         String dadosJson = gson.toJson(dados);
 
@@ -136,7 +138,8 @@ public class ClientHandler implements Runnable {
                         System.out.println("Enviado: " + dadosJson);
 
                         break;
-                    } case "LOGOUT": {
+                    }
+                    case "LOGOUT": {
                         String tokenString = msgRecebida.getToken();
                         Resposta resposta = new Resposta();
 
@@ -151,8 +154,9 @@ public class ClientHandler implements Runnable {
                         escritor.println(reString);
                         System.out.println("Enviado: " + reString);
                         break;
-                    } case "EDITAR_PROPRIO_USUARIO": {
-                        
+                    }
+                    case "EDITAR_PROPRIO_USUARIO": {
+
                         String tokenString = msgRecebida.getToken();
                         Resposta resposta = new Resposta();
 
@@ -160,21 +164,22 @@ public class ClientHandler implements Runnable {
                             resposta.setStatus("401");
                             resposta.setMensagem("Erro: Token inválido");
                         } else {
-                            //String res;
+                            // String res;
                             String userJson = gson.toJson(msgRecebida.getUsuario());
                             Usuario user = gson.fromJson(userJson, Usuario.class);
                             DecodedJWT jwt = TokenUtil.decodeToken(tokenString);
-                            
+
                             String usuarioNome = jwt.getSubject();
-                            resposta = db.alterarSenha(user.getSenha(),usuarioNome); 
-                            //resposta.setStatus("200");
+                            resposta = db.alterarSenha(user.getSenha(), usuarioNome);
+                            // resposta.setStatus("200");
                         }
                         String reString = gson.toJson(resposta);
-                        System.out.println("Enviado: " +reString);
+                        System.out.println("Enviado: " + reString);
                         escritor.println(reString);
-                        
+
                         break;
-                    } case "LISTAR_PROPRIO_USUARIO": {
+                    }
+                    case "LISTAR_PROPRIO_USUARIO": {
                         String tokenString = msgRecebida.getToken();
                         Resposta resposta = new Resposta();
                         Login user = new Login();
@@ -183,19 +188,20 @@ public class ClientHandler implements Runnable {
                             user.setStatus("401");
                             user.setMensagem("Erro: Token inválido");
                         } else {
-                        DecodedJWT jwt = TokenUtil.decodeToken(tokenString);
-                        String usuarioNome = jwt.getSubject();
+                            DecodedJWT jwt = TokenUtil.decodeToken(tokenString);
+                            String usuarioNome = jwt.getSubject();
 
-                        user.setUsuario(usuarioNome);
-                        user.setStatus("200");
-                        user.setMensagem("Sucesso: operação realizada com sucesso");
-                    }
-                        
-                    String reString = gson.toJson(user);
-                    System.out.println("Enviado: " +reString);
-                    escritor.println(reString);
+                            user.setUsuario(usuarioNome);
+                            user.setStatus("200");
+                            user.setMensagem("Sucesso: operação realizada com sucesso");
+                        }
+
+                        String reString = gson.toJson(user);
+                        System.out.println("Enviado: " + reString);
+                        escritor.println(reString);
                         break;
-                    } case "EXCLUIR_PROPRIO_USUARIO": {
+                    }
+                    case "EXCLUIR_PROPRIO_USUARIO": {
                         String tokenString = msgRecebida.getToken();
                         Resposta resposta = new Resposta();
 
@@ -205,23 +211,82 @@ public class ClientHandler implements Runnable {
                         } else {
                             DecodedJWT jwt = TokenUtil.decodeToken(tokenString);
                             String usuarioNome = jwt.getSubject();
-                            resposta = db.deletarUsuario(usuarioNome); 
+                            resposta = db.deletarUsuario(usuarioNome);
                         }
                         String reString = gson.toJson(resposta);
                         System.out.println("Enviado: " + reString);
                         escritor.println(reString);
-                        
+
+                        break;
+                    }
+                    case "LISTAR_USUARIOS": {
+
+                        String tokenString = msgRecebida.getToken();
+                        Resposta resposta = new Resposta();
+
+                        if (!TokenUtil.decodeToken(tokenString).getClaim("role").asString().equals("admin")) {
+                            resposta.setStatus("403");
+                            resposta.setMensagem("Erro: sem permissão");
+                        } else if (!TokenUtil.isTokenValido(tokenString)) {
+                            resposta.setStatus("401");
+                            resposta.setMensagem("Erro: Token inválido");
+                        } else {
+
+                            resposta = db.listarUsuarios();
+                        }
+
+                        String jsonResposta = gson.toJson(resposta);
+                        escritor.println(jsonResposta);
+                        System.out.println("Enviado: " + jsonResposta);
+
+                        break;
+                    } // Dentro do switch(msgRecebida.getOperacao())
+
+                    case "CRIAR_FILME": {
+                        if (TokenUtil.isTokenValido(msgRecebida.getToken())) { // Exemplo de verificação de admin
+                            // Extrai o payload do Filme
+                            String dadosJson = gson.toJson(msgRecebida.getFilme());
+                            Filme filmeParaCriar = gson.fromJson(dadosJson, Filme.class);
+
+                            Resposta resposta = db.criarFilme(filmeParaCriar);
+                            escritor.println(gson.toJson(resposta));
+                        } else {
+                            escritor.println(gson.toJson(
+                                    new Resposta("403", "Acesso negado. Requer privilégios de administrador.")));
+                        }
+                        break;
+                    }
+                    case "ADMIN_DELETAR_FILME": {
+                        // Verificamos se o token é de um admin
+                        if (!TokenUtil.isTokenValido(msgRecebida.getToken())) {
+                            escritor.println(gson.toJson(
+                                    new Resposta("403", "Acesso negado. Requer privilégios de administrador.")));
+                            break;
+                        }
+
+                        try {
+                            // O ID do filme foi enviado no campo 'dados'
+                            String filmeIdParaDeletar = (String) msgRecebida.getFilme();
+
+                            Resposta resposta = db.deletarFilme(filmeIdParaDeletar);
+                            escritor.println(gson.toJson(resposta));
+
+                        } catch (Exception e) {
+                            escritor.println(gson.toJson(new Resposta("400", "Payload (ID do filme) inválido.")));
+                        }
                         break;
                     }
                     default:
                         System.out.println("Operação desconhecida: " + msgRecebida.getOperacao());
                         break;
                 }
-                //System.out.println("Recebido de " + clientSocket.getInetAddress() + ": " + msgRecebida.getConteudo());
+                // System.out.println("Recebido de " + clientSocket.getInetAddress() + ": " +
+                // msgRecebida.getConteudo());
 
-                //Mensagem msgResposta = new Mensagem("Servidor", "Mensagem '" + msgRecebida.getConteudo() + "' recebida.");
-                //String jsonResposta = gson.toJson(msgResposta);
-                //.println(jsonResposta);
+                // Mensagem msgResposta = new Mensagem("Servidor", "Mensagem '" +
+                // msgRecebida.getConteudo() + "' recebida.");
+                // String jsonResposta = gson.toJson(msgResposta);
+                // .println(jsonResposta);
             }
         } catch (IOException e) {
             System.err.println("Erro na thread do cliente: " + e.getMessage());

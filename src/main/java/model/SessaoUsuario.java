@@ -8,6 +8,7 @@ public class SessaoUsuario {
 
     private static SessaoUsuario instance;
     private String token;
+    private String role;
     // Você pode adicionar outros dados do usuário aqui, como nome, id, etc.
 
     // O construtor é privado para impedir a criação de novas instâncias
@@ -46,5 +47,9 @@ public class SessaoUsuario {
     public void limparSessao() {
         this.token = null;
         // Limpe outros dados do usuário se houver
+    }
+
+    public void setRole(String role) {
+        this.role = role;
     }
 }

@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.List;
 
 public class Resposta {
     @Override
@@ -24,6 +25,8 @@ public class Resposta {
     private Object usuario;
     private Object filmes;
     private Object review;
+    private List<Usuario> usuarios;
+    
     
 
     public Resposta(String status, Object dados) {
@@ -31,6 +34,7 @@ public class Resposta {
         this.dados = dados;
         this.mensagem = computeMensagemFromStatus();
     }
+    
     public Resposta(String status, Object dados, String tipo) {
         this.status = status;
 
@@ -43,6 +47,20 @@ public class Resposta {
         }
         this.mensagem = computeMensagemFromStatus();
     }
+
+    public Resposta(String status, List<Usuario> dados, String tipo) {
+        this.status = status;
+
+        if (tipo.equals("lista_usuario")) {
+            this.usuarios = dados;
+        } else if (tipo.equals("lista_review")) {
+            this.review = dados;
+        } else if (tipo.equals("lista_filme")) {
+            this.filmes = dados;
+        }
+        
+    }
+
 
     public Resposta(String status) {
         this.status = status;
@@ -127,5 +145,9 @@ public class Resposta {
     public String getErrorMessage(String code) {
         // Deprecated: use getMensagem() instead, which now reads from guia_erros.txt
         return getMensagem();
+    }
+
+    public List<Usuario> getListaUsuarios() {
+        return usuarios;
     }
 }

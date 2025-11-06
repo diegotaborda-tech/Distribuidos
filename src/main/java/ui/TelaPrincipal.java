@@ -243,7 +243,7 @@ public class TelaPrincipal extends JFrame {
     public void setVisible(boolean visible) {
         super.setVisible(visible);
         if (visible) {
-            //buscarDados();
+            buscarDados();
         }
     }
 
@@ -251,9 +251,9 @@ public class TelaPrincipal extends JFrame {
         String token = SessaoUsuario.getInstance().getToken();
 
         Requisicao reqFilmes = new Requisicao("LISTAR_FILMES");
-        Requisicao reqReviews = new Requisicao("LISTAR_REVIEWS_USUARIO");
+        // Requisicao reqReviews = new Requisicao("LISTAR_REVIEWS_USUARIO");
         String jsonReqFilmes = gson.toJson(reqFilmes);
-        String jsonReqReviews = gson.toJson(reqReviews);
+        // String jsonReqReviews = gson.toJson(reqReviews);
 
         new Thread(() -> {
             try {
@@ -269,9 +269,9 @@ public class TelaPrincipal extends JFrame {
                 RespostaFilmes respostaFilmes = gson.fromJson(respostaJsonFilmes, RespostaFilmes.class);
 
                 // Busca Reviews
-                String respostaJsonReviews = NetworkUtil.sendJson(socket, jsonReqReviews, gson);
-                System.out.println("Recebido: " + respostaJsonReviews);
-                Resposta respostaReviews = gson.fromJson(respostaJsonReviews, Resposta.class);
+                // String respostaJsonReviews = NetworkUtil.sendJson(socket, jsonReqReviews, gson);
+                // System.out.println("Recebido: " + respostaJsonReviews);
+                // Resposta respostaReviews = gson.fromJson(respostaJsonReviews, Resposta.class);
 
                 // Processa as respostas
                 if (respostaFilmes != null && "200".equals(respostaFilmes.getStatus())) {
@@ -284,19 +284,19 @@ public class TelaPrincipal extends JFrame {
                     });
                 } // Adicione um 'else' para tratar erro de filmes se necessário
 
-                if (respostaReviews != null && "200".equals(respostaReviews.getStatus())) {
-                    String dadosJsonReviews = gson.toJson(respostaReviews.getDados());
-                    java.lang.reflect.Type tipoListaReviews = new TypeToken<List<Review>>() {
-                    }.getType();
-                    List<Review> reviewsRecebidas = gson.fromJson(dadosJsonReviews, tipoListaReviews);
+                // if (respostaReviews != null && "200".equals(respostaReviews.getStatus())) {
+                //     String dadosJsonReviews = gson.toJson(respostaReviews.getDados());
+                //     java.lang.reflect.Type tipoListaReviews = new TypeToken<List<Review>>() {
+                //     }.getType();
+                //     List<Review> reviewsRecebidas = gson.fromJson(dadosJsonReviews, tipoListaReviews);
 
-                    SwingUtilities.invokeLater(() -> {
-                        modeloListaReviews.clear();
-                        for (Review review : reviewsRecebidas) {
-                            modeloListaReviews.addElement(review);
-                        }
-                    });
-                } // Adicione um 'else' para tratar erro de reviews se necessário
+                //     SwingUtilities.invokeLater(() -> {
+                //         modeloListaReviews.clear();
+                //         for (Review review : reviewsRecebidas) {
+                //             modeloListaReviews.addElement(review);
+                //         }
+                //     });
+                // } // Adicione um 'else' para tratar erro de reviews se necessário
 
             } catch (Exception e) {
                 e.printStackTrace();

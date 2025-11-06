@@ -6,6 +6,7 @@ import model.NetworkUtil;
 import model.Requisicao;
 import model.Resposta;
 import model.SessaoUsuario;
+import model.TokenUtil;
 import model.Usuario;
 
 import javax.swing.*;
@@ -126,6 +127,7 @@ public class TelaLogin extends JFrame {
 
                 if (resposta != null && "200".equals(resposta.getStatus())) {
                     SessaoUsuario.getInstance().salvarToken(resposta.getToken());
+                    
                     if(usuario.equals("admin") && senha.equals("admin")) {
                     	
                     	SwingUtilities.invokeLater(() -> {

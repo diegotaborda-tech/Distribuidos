@@ -307,4 +307,129 @@ public class Querys {
 
         return resposta;
     }
+
+    public Resposta listarUsuarios() {
+        String sql = "SELECT id, usuario FROM usuarios";
+        
+        // Preparamos a lista que será retornada.
+        List<Usuario> listaDeUsuarios = new ArrayList<>();
+
+        try (Connection conn = DriverManager.getConnection(urlBanco);
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+
+            while (rs.next()) {
+                // Criamos um objeto Usuario para cada linha
+                Usuario user = new Usuario();
+
+                // Populamos o objeto APENAS com os dados públicos
+                user.setId(rs.getString("id"));
+                user.setNome(rs.getString("usuario")); // Mapeando a coluna 'usuario' para o campo 'nome'
+                // A senha (user.setSenha) é intencionalmente deixada como nula.
+
+                listaDeUsuarios.add(user);
+            }
+            
+            // Retornamos a resposta de sucesso, com a lista no campo 'dados'.
+            return new Resposta("200", listaDeUsuarios, "lista_usuario");
+
+        } catch (SQLException e) {
+            System.err.println("Erro de SQL ao listar usuários: " + e.getMessage());
+            // Retorna um erro genérico para o cliente, sem expor detalhes do banco.
+            return new Resposta("500");
+        }
+    }
+
+    // Em model/Querys.java
+
+    public Resposta criarFilme(Filme filme) {
+        String sql = "INSERT INTO filmes (nome, ano, generos, sinopse, diretor) VALUES (?, ?, ?, ?, ?)";
+        
+        try (Connection conn = DriverManager.getConnection(urlBanco);
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            // Converte a List<String> de gêneros de volta para uma string "A,B,C"
+            String generosComoString = String.join(",", filme.getGenero());
+
+            stmt.setString(1, filme.getTitulo());
+            stmt.setString(2, filme.getAno());
+            stmt.setString(3, generosComoString);
+            stmt.setString(4, filme.getSinopse());
+            stmt.setString(5, filme.getDiretor());
+
+            int rowsInserted = stmt.executeUpdate();
+            if (rowsInserted > 0) {
+                return new Resposta("201", "Filme criado com sucesso.");
+            }
+            return new Resposta("500", "Falha ao inserir filme no banco.");
+
+        } catch (SQLException e) {
+            System.err.println("Erro de SQL ao criar filme: " + e.getMessage());
+            if (e.getErrorCode() == 19) { // SQLITE_CONSTRAINT (provavelmente 'nome' duplicado)
+                 return new Resposta("409", "Um filme com este título já existe.");
+            }
+            return new Resposta("500", "Erro interno do servidor.");
+        }
+    }
+
+    public Resposta deletarFilme(String filmeId) {
+    String sqlDeleteReviews = "DELETE FROM reviews WHERE filme_id = ?";
+    String sqlDeleteFilme = "DELETE FROM filmes WHERE id = ?";
+    Connection conn = null; // Declaramos a conexão fora do try para o rollback funcionar
+
+    try {
+        int id = Integer.parseInt(filmeId); // Converte o ID para int, como está no DB
+
+        conn = DriverManager.getConnection(urlBanco);
+        // --- INÍCIO DA TRANSAÇÃO ---
+        conn.setAutoCommit(false);
+
+        // 1. Deletar as Reviews primeiro (devido à Foreign Key)
+        try (PreparedStatement stmtReviews = conn.prepareStatement(sqlDeleteReviews)) {
+            stmtReviews.setInt(1, id);
+            stmtReviews.executeUpdate();
+            // Não precisamos verificar o número de linhas, pois pode não haver reviews
+        }
+
+        // 2. Deletar o Filme
+        int rowsAffected;
+        try (PreparedStatement stmtFilme = conn.prepareStatement(sqlDeleteFilme)) {
+            stmtFilme.setInt(1, id);
+            rowsAffected = stmtFilme.executeUpdate();
+        }
+
+        // Se chegamos aqui, ambas as queries funcionaram.
+        conn.commit(); // --- FIM DA TRANSAÇÃO (SUCESSO) ---
+
+        if (rowsAffected > 0) {
+            return new Resposta("200", "Filme e suas reviews foram deletados com sucesso.");
+        } else {
+            return new Resposta("404", "Filme não encontrado.");
+        }
+
+    } catch (NumberFormatException e) {
+        return new Resposta("400", "ID do filme inválido.");
+    } catch (SQLException e) {
+        // Se algo deu errado, desfazemos TODAS as alterações
+        System.err.println("Erro de SQL na transação de exclusão: " + e.getMessage());
+        try {
+            if (conn != null) {
+                conn.rollback(); // --- ROLLBACK DA TRANSAÇÃO (FALHA) ---
+            }
+        } catch (SQLException ex) {
+            System.err.println("Erro ao tentar reverter o rollback: " + ex.getMessage());
+        }
+        return new Resposta("500", "Erro interno no servidor ao deletar filme.");
+    } finally {
+        // Garante que a conexão volte ao modo auto-commit e seja fechada
+        try {
+            if (conn != null) {
+                conn.setAutoCommit(true);
+                conn.close();
+            }
+        } catch (SQLException e) {
+            System.err.println("Erro ao fechar a conexão: " + e.getMessage());
+        }
+    }
+}
 }
