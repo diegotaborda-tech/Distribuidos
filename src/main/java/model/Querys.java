@@ -165,7 +165,9 @@ public class Querys {
                 Filme filme = new Filme(idStr, titulo, ano, listaDeGeneros, sinopse, notaStr, qtdStr, diretor);
                 filmes.add(filme);
             }
-            return new Resposta("200", filmes, "filme");
+            Resposta res = new Resposta("200", filmes, "filme");
+            res.setMensagem("Sucesso: operação realizada com sucesso");
+            return res;
         } catch (Exception e) {
             System.err.println("Erro no Banco: " + e.getMessage());
             return new Resposta("500");
@@ -343,6 +345,30 @@ public class Querys {
     // Em model/Querys.java
 
     public Resposta criarFilme(Filme filme) {
+        // Primeiro verifica se já existe um filme com a mesma combinação (título, diretor, ano)
+        String sqlVerificar = "SELECT id FROM filmes WHERE nome = ? AND diretor = ? AND ano = ?";
+        
+        try (Connection conn = DriverManager.getConnection(urlBanco);
+             PreparedStatement stmtVerificar = conn.prepareStatement(sqlVerificar)) {
+            
+            stmtVerificar.setString(1, filme.getTitulo());
+            stmtVerificar.setString(2, filme.getDiretor());
+            stmtVerificar.setString(3, filme.getAno());
+            
+            ResultSet rs = stmtVerificar.executeQuery();
+            if (rs.next()) {
+                Resposta res = new Resposta("409");
+                res.setMensagem("Já existe um filme com este título, diretor e ano.");
+                return res;
+            }
+        } catch (SQLException e) {
+            System.err.println("Erro ao verificar duplicidade: " + e.getMessage());
+            Resposta res = new Resposta("500");
+            res.setMensagem("Erro ao verificar existência do filme.");
+            return res;
+        }
+        
+        // Se não existe, insere o novo filme
         String sql = "INSERT INTO filmes (nome, ano, generos, sinopse, diretor) VALUES (?, ?, ?, ?, ?)";
         
         try (Connection conn = DriverManager.getConnection(urlBanco);
@@ -359,16 +385,172 @@ public class Querys {
 
             int rowsInserted = stmt.executeUpdate();
             if (rowsInserted > 0) {
-                return new Resposta("201", "Filme criado com sucesso.");
+                Resposta res = new Resposta("201");
+                res.setMensagem("Filme criado com sucesso.");
+                return res;
             }
-            return new Resposta("500", "Falha ao inserir filme no banco.");
+            Resposta res = new Resposta("500");
+            res.setMensagem("Falha ao inserir filme no banco.");
+            return res;
 
         } catch (SQLException e) {
             System.err.println("Erro de SQL ao criar filme: " + e.getMessage());
-            if (e.getErrorCode() == 19) { // SQLITE_CONSTRAINT (provavelmente 'nome' duplicado)
-                 return new Resposta("409", "Um filme com este título já existe.");
+            if (e.getErrorCode() == 19) { // SQLITE_CONSTRAINT
+                Resposta res = new Resposta("409");
+                res.setMensagem("Um filme com este título já existe.");
+                return res;
             }
-            return new Resposta("500", "Erro interno do servidor.");
+            Resposta res = new Resposta("500");
+            res.setMensagem("Erro interno do servidor.");
+            return res;
+        }
+    }
+
+    public Resposta editarFilme(Filme filme) {
+        // Validações de entrada
+        if (filme == null) {
+            Resposta res = new Resposta("422");
+            res.setMensagem("Erro: Chaves faltantes ou invalidas");
+            return res;
+        }
+        
+        if (filme.getId() == null || filme.getId().trim().isEmpty()) {
+            Resposta res = new Resposta("422");
+            res.setMensagem("Erro: Chaves faltantes ou invalidas");
+            return res;
+        }
+        
+        if (filme.getTitulo() == null || filme.getTitulo().trim().isEmpty()) {
+            Resposta res = new Resposta("422");
+            res.setMensagem("Erro: Chaves faltantes ou invalidas");
+            return res;
+        }
+        
+        if (filme.getDiretor() == null || filme.getDiretor().trim().isEmpty()) {
+            Resposta res = new Resposta("422");
+            res.setMensagem("Erro: Chaves faltantes ou invalidas");
+            return res;
+        }
+        
+        if (filme.getAno() == null || filme.getAno().trim().isEmpty()) {
+            Resposta res = new Resposta("422");
+            res.setMensagem("Erro: Chaves faltantes ou invalidas");
+            return res;
+        }
+        
+        if (filme.getGenero() == null || filme.getGenero().isEmpty()) {
+            Resposta res = new Resposta("422");
+            res.setMensagem("Erro: Chaves faltantes ou invalidas");
+            return res;
+        }
+        
+        // Validação do ano
+        try {
+            int ano = Integer.parseInt(filme.getAno());
+            if (ano < 1888 || ano > 2100) { // Primeiro filme foi em 1888
+                Resposta res = new Resposta("405");
+                res.setMensagem("Erro: Campos inválidos, verifique o tipo e quantidade de caracteres");
+                return res;
+            }
+        } catch (NumberFormatException e) {
+            Resposta res = new Resposta("405");
+            res.setMensagem("Erro: Campos inválidos, verifique o tipo e quantidade de caracteres");
+            return res;
+        }
+        
+        // Validação do ID
+        int filmeId;
+        try {
+            filmeId = Integer.parseInt(filme.getId());
+        } catch (NumberFormatException e) {
+            Resposta res = new Resposta("400");
+            res.setMensagem("Erro: Operação não encontrada ou inválida");
+            return res;
+        }
+        
+        // Verifica se o filme existe
+        String sqlVerificar = "SELECT id FROM filmes WHERE id = ?";
+        try (Connection conn = DriverManager.getConnection(urlBanco);
+             PreparedStatement stmtVerificar = conn.prepareStatement(sqlVerificar)) {
+            
+            stmtVerificar.setInt(1, filmeId);
+            ResultSet rs = stmtVerificar.executeQuery();
+            
+            if (!rs.next()) {
+                Resposta res = new Resposta("404");
+                res.setMensagem("Erro: Recurso inexistente");
+                return res;
+            }
+        } catch (SQLException e) {
+            System.err.println("Erro ao verificar filme: " + e.getMessage());
+            Resposta res = new Resposta("500");
+            res.setMensagem("Erro: Falha interna do servidor");
+            return res;
+        }
+        
+        // Verifica se já existe outro filme com a mesma combinação (título, diretor, ano)
+        String sqlVerificarDuplicidade = "SELECT id FROM filmes WHERE nome = ? AND diretor = ? AND ano = ? AND id != ?";
+        try (Connection conn = DriverManager.getConnection(urlBanco);
+             PreparedStatement stmtDuplicidade = conn.prepareStatement(sqlVerificarDuplicidade)) {
+            
+            stmtDuplicidade.setString(1, filme.getTitulo());
+            stmtDuplicidade.setString(2, filme.getDiretor());
+            stmtDuplicidade.setString(3, filme.getAno());
+            stmtDuplicidade.setInt(4, filmeId);
+            
+            ResultSet rs = stmtDuplicidade.executeQuery();
+            if (rs.next()) {
+                Resposta res = new Resposta("409");
+                res.setMensagem("Erro: Recurso ja existe");
+                return res;
+            }
+        } catch (SQLException e) {
+            System.err.println("Erro ao verificar duplicidade: " + e.getMessage());
+            Resposta res = new Resposta("500");
+            res.setMensagem("Erro: Falha interna do servidor");
+            return res;
+        }
+        
+        // Atualiza o filme
+        String sql = "UPDATE filmes SET nome = ?, ano = ?, generos = ?, sinopse = ?, diretor = ? WHERE id = ?";
+        
+        try (Connection conn = DriverManager.getConnection(urlBanco);
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            // Converte a List<String> de gêneros para uma string "A,B,C"
+            String generosComoString = String.join(",", filme.getGenero());
+
+            stmt.setString(1, filme.getTitulo());
+            stmt.setString(2, filme.getAno());
+            stmt.setString(3, generosComoString);
+            stmt.setString(4, filme.getSinopse());
+            stmt.setString(5, filme.getDiretor());
+            stmt.setInt(6, filmeId);
+
+            int rowsUpdated = stmt.executeUpdate();
+            
+            if (rowsUpdated > 0) {
+                Resposta res = new Resposta("200");
+                res.setMensagem("Sucesso: operação realizada com sucesso");
+                return res;
+            }
+            Resposta res = new Resposta("500");
+            res.setMensagem("Erro: Falha interna do servidor");
+            return res;
+
+        } catch (SQLException e) {
+            System.err.println("Erro de SQL ao editar filme: " + e.getMessage());
+            
+            // Verifica se é um erro de constraint (nome duplicado)
+            if (e.getErrorCode() == 19) { // SQLITE_CONSTRAINT
+                Resposta res = new Resposta("409");
+                res.setMensagem("Erro: Recurso ja existe");
+                return res;
+            }
+            
+            Resposta res = new Resposta("500");
+            res.setMensagem("Erro: Falha interna do servidor");
+            return res;
         }
     }
 
@@ -402,13 +584,19 @@ public class Querys {
         conn.commit(); // --- FIM DA TRANSAÇÃO (SUCESSO) ---
 
         if (rowsAffected > 0) {
-            return new Resposta("200", "Filme e suas reviews foram deletados com sucesso.");
+            Resposta res = new Resposta("200");
+            res.setMensagem("Filme e suas reviews foram deletados com sucesso.");
+            return res;
         } else {
-            return new Resposta("404", "Filme não encontrado.");
+            Resposta res = new Resposta("404");
+            res.setMensagem("Filme não encontrado.");
+            return res;
         }
 
     } catch (NumberFormatException e) {
-        return new Resposta("400", "ID do filme inválido.");
+        Resposta res = new Resposta("400");
+        res.setMensagem("ID do filme inválido.");
+        return res;
     } catch (SQLException e) {
         // Se algo deu errado, desfazemos TODAS as alterações
         System.err.println("Erro de SQL na transação de exclusão: " + e.getMessage());
@@ -419,7 +607,9 @@ public class Querys {
         } catch (SQLException ex) {
             System.err.println("Erro ao tentar reverter o rollback: " + ex.getMessage());
         }
-        return new Resposta("500", "Erro interno no servidor ao deletar filme.");
+        Resposta res = new Resposta("500");
+        res.setMensagem("Erro interno no servidor ao deletar filme.");
+        return res;
     } finally {
         // Garante que a conexão volte ao modo auto-commit e seja fechada
         try {

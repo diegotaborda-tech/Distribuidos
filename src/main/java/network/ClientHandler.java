@@ -16,11 +16,22 @@ import model.Usuario;
 
 import java.io.*;
 import java.net.*;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 public class ClientHandler implements Runnable {
     private Socket clientSocket;
     private static Gson gson = new Gson();
     private TokenUtil tokenUtil = new TokenUtil();
+    
+    // Gêneros pré-cadastrados válidos
+    private static final Set<String> GENEROS_VALIDOS = new HashSet<>(Arrays.asList(
+        "Ação", "Aventura", "Comédia", "Drama", "Fantasia", 
+        "Ficção Científica", "Terror", "Romance", "Documentário", 
+        "Musical", "Animação"
+    ));
 
     public ClientHandler(Socket socket) {
         this.clientSocket = socket;
@@ -235,6 +246,7 @@ public class ClientHandler implements Runnable {
                             resposta = db.listarUsuarios();
                         }
 
+                        resposta.setMensagem("Sucesso: operação realizada com sucesso");
                         String jsonResposta = gson.toJson(resposta);
                         escritor.println(jsonResposta);
                         System.out.println("Enviado: " + jsonResposta);
@@ -243,36 +255,99 @@ public class ClientHandler implements Runnable {
                     } // Dentro do switch(msgRecebida.getOperacao())
 
                     case "CRIAR_FILME": {
-                        if (TokenUtil.isTokenValido(msgRecebida.getToken())) { // Exemplo de verificação de admin
-                            // Extrai o payload do Filme
-                            String dadosJson = gson.toJson(msgRecebida.getFilme());
-                            Filme filmeParaCriar = gson.fromJson(dadosJson, Filme.class);
-
-                            Resposta resposta = db.criarFilme(filmeParaCriar);
-                            escritor.println(gson.toJson(resposta));
-                        } else {
-                            escritor.println(gson.toJson(
-                                    new Resposta("403", "Acesso negado. Requer privilégios de administrador.")));
+                        if (!TokenUtil.isTokenValido(msgRecebida.getToken())) {
+                            Resposta respostaErro = new Resposta("403");
+                            respostaErro.setMensagem("Acesso negado. Requer privilégios de administrador.");
+                            String jsonResposta = gson.toJson(respostaErro);
+                            escritor.println(jsonResposta);
+                            System.out.println("Enviado: " + jsonResposta);
+                            break;
                         }
+                        
+                        // Extrai o payload do Filme
+                        String dadosJson = gson.toJson(msgRecebida.getFilme());
+                        Filme filmeParaCriar = gson.fromJson(dadosJson, Filme.class);
+                        
+                        // Valida o filme
+                        if (!validarFilme(filmeParaCriar)) {
+                            Resposta respostaErro = new Resposta("405");
+                            respostaErro.setMensagem("Erro: Campos inválidos, verifique o tipo e quantidade de caracteres");
+                            String jsonResposta = gson.toJson(respostaErro);
+                            escritor.println(jsonResposta);
+                            System.out.println("Enviado: " + jsonResposta);
+                            break;
+                        }
+
+                        Resposta resposta = db.criarFilme(filmeParaCriar);
+                        String jsonResposta = gson.toJson(resposta);
+                        escritor.println(jsonResposta);
+                        System.out.println("Enviado: " + jsonResposta);
                         break;
                     }
+                    
+                    case "EDITAR_FILME": {
+                        if (!TokenUtil.isTokenValido(msgRecebida.getToken())) {
+                            Resposta respostaErro = new Resposta("403");
+                            respostaErro.setMensagem("Acesso negado. Requer privilégios de administrador.");
+                            String jsonResposta = gson.toJson(respostaErro);
+                            escritor.println(jsonResposta);
+                            System.out.println("Enviado: " + jsonResposta);
+                            break;
+                        }
+                        
+                        // Extrai o payload do Filme
+                        String dadosJson = gson.toJson(msgRecebida.getFilme());
+                        Filme filmeParaEditar = gson.fromJson(dadosJson, Filme.class);
+                        
+                        // Valida o filme (mesmas regras que criação)
+                        if (!validarFilme(filmeParaEditar)) {
+                            Resposta respostaErro = new Resposta("405");
+                            respostaErro.setMensagem("Erro: Campos inválidos, verifique o tipo e quantidade de caracteres");
+                            String jsonResposta = gson.toJson(respostaErro);
+                            escritor.println(jsonResposta);
+                            System.out.println("Enviado: " + jsonResposta);
+                            break;
+                        }
+
+                        Resposta resposta = db.editarFilme(filmeParaEditar);
+                        resposta.setMensagem("Sucesso: operação realizada com sucesso");
+                        String jsonResposta = gson.toJson(resposta);
+                        escritor.println(jsonResposta);
+                        System.out.println("Enviado: " + jsonResposta);
+                        break;
+                    }
+                    
+                    case "EXCLUIR_FILME":
                     case "ADMIN_DELETAR_FILME": {
                         // Verificamos se o token é de um admin
                         if (!TokenUtil.isTokenValido(msgRecebida.getToken())) {
-                            escritor.println(gson.toJson(
-                                    new Resposta("403", "Acesso negado. Requer privilégios de administrador.")));
+                            Resposta respostaErro = new Resposta("403");
+                            respostaErro.setMensagem("Acesso negado. Requer privilégios de administrador.");
+                            String jsonResposta = gson.toJson(respostaErro);
+                            escritor.println(jsonResposta);
+                            System.out.println("Enviado: " + jsonResposta);
                             break;
                         }
 
                         try {
-                            // O ID do filme foi enviado no campo 'dados'
-                            String filmeIdParaDeletar = (String) msgRecebida.getFilme();
+                            // O ID do filme pode estar no campo 'id' ou no campo 'filme'
+                            String filmeIdParaDeletar = msgRecebida.getId();
+                            if (filmeIdParaDeletar == null || filmeIdParaDeletar.isEmpty()) {
+                                filmeIdParaDeletar = (String) msgRecebida.getFilme();
+                            }
 
                             Resposta resposta = db.deletarFilme(filmeIdParaDeletar);
-                            escritor.println(gson.toJson(resposta));
+                            
+                            String jsonResposta = gson.toJson(resposta);
+                            escritor.println(jsonResposta);
+                            System.out.println("Enviado: " + jsonResposta);
 
                         } catch (Exception e) {
-                            escritor.println(gson.toJson(new Resposta("400", "Payload (ID do filme) inválido.")));
+                            Resposta respostaErro = new Resposta("400");
+                            respostaErro.setMensagem("Payload (ID do filme) inválido: " + e.getMessage());
+                            String jsonResposta = gson.toJson(respostaErro);
+                            escritor.println(jsonResposta);
+                            System.out.println("Enviado: " + jsonResposta);
                         }
                         break;
                     }
@@ -298,5 +373,67 @@ public class ClientHandler implements Runnable {
                 e.printStackTrace();
             }
         }
+    }
+    
+    /**
+     * Valida os dados de um filme segundo as regras de negócio.
+     * Retorna true se válido, false se inválido.
+     */
+    private boolean validarFilme(Filme filme) {
+        // Validação de campos obrigatórios
+        if (filme == null) {
+            return false;
+        }
+        
+        // Título: min 3, max 30
+        if (filme.getTitulo() == null || filme.getTitulo().trim().isEmpty()) {
+            return false;
+        }
+        String titulo = filme.getTitulo().trim();
+        if (titulo.length() < 3 || titulo.length() > 30) {
+            return false;
+        }
+        
+        // Ano: min 3, max 4, apenas dígitos
+        if (filme.getAno() == null || filme.getAno().trim().isEmpty()) {
+            return false;
+        }
+        String ano = filme.getAno().trim();
+        if (!ano.matches("\\d+") || ano.length() < 3 || ano.length() > 4) {
+            return false;
+        }
+        
+        // Diretor: min 3, max 30
+        if (filme.getDiretor() == null || filme.getDiretor().trim().isEmpty()) {
+            return false;
+        }
+        String diretor = filme.getDiretor().trim();
+        if (diretor.length() < 3 || diretor.length() > 30) {
+            return false;
+        }
+        
+        // Gêneros: deve ter pelo menos um, e todos devem estar na lista pré-cadastrada
+        if (filme.getGenero() == null || filme.getGenero().isEmpty()) {
+            return false;
+        }
+        for (String genero : filme.getGenero()) {
+            if (genero == null || genero.trim().isEmpty()) {
+                return false;
+            }
+            if (!GENEROS_VALIDOS.contains(genero.trim())) {
+                return false;
+            }
+        }
+        
+        // Sinopse: max 250
+        if (filme.getSinopse() == null || filme.getSinopse().trim().isEmpty()) {
+            return false;
+        }
+        String sinopse = filme.getSinopse().trim();
+        if (sinopse.length() > 250) {
+            return false;
+        }
+        
+        return true; // Válido
     }
 }

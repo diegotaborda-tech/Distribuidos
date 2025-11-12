@@ -123,11 +123,20 @@ public class ReviewDialog extends JDialog {
                 // Example: send JSON to server (you probably have a NetworkUtil; adapt as necessary)
                 try {
                     String json = gson.toJson(req);
-                    System.out.println("JSON: "+json);
+                    
+                    System.out.println("=== REQUISIÇÃO ENVIADA (CRIAR_REVIEW) ===");
+                    System.out.println(json);
+                    System.out.println("==========================================");
+                    
                     String jsonResponse;
                     Resposta res;
 
                     jsonResponse = NetworkUtil.sendJson(socket, json, gson);
+                    
+                    System.out.println("=== RESPOSTA RECEBIDA (CRIAR_REVIEW) ===");
+                    System.out.println(jsonResponse);
+                    System.out.println("=========================================");
+                    
                     res = gson.fromJson(jsonResponse, Resposta.class);
 
                     

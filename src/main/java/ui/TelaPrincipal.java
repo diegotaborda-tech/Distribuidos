@@ -110,8 +110,15 @@ public class TelaPrincipal extends JFrame {
                     Requisicao req = new Requisicao("EXCLUIR_PROPRIO_USUARIO", token);
                     String jsonReq = gson.toJson(req);
 
+                    System.out.println("=== REQUISIÇÃO ENVIADA (EXCLUIR_PROPRIO_USUARIO) ===");
+                    System.out.println(jsonReq);
+                    System.out.println("=====================================================");
+
                     String resJson = NetworkUtil.sendJson(socket, jsonReq, gson);
-                    System.out.println("Recebido: " + resJson);
+                    
+                    System.out.println("=== RESPOSTA RECEBIDA (EXCLUIR_PROPRIO_USUARIO) ===");
+                    System.out.println(resJson);
+                    System.out.println("====================================================");
 
                     Resposta res = gson.fromJson(resJson, Resposta.class);
 
@@ -154,10 +161,16 @@ public class TelaPrincipal extends JFrame {
                     Requisicao req = new Requisicao("EDITAR_PROPRIO_USUARIO",usuario,token,"usuario");
 
                     String jsonReq = gson.toJson(req);
+                    
+                    System.out.println("=== REQUISIÇÃO ENVIADA (EDITAR_PROPRIO_USUARIO) ===");
                     System.out.println(jsonReq);
+                    System.out.println("====================================================");
 
                     String resJson = NetworkUtil.sendJson(socket, jsonReq, gson);
-                    System.out.println("Recebido: " + resJson);
+                    
+                    System.out.println("=== RESPOSTA RECEBIDA (EDITAR_PROPRIO_USUARIO) ===");
+                    System.out.println(resJson);
+                    System.out.println("===================================================");
 
                     Resposta res = gson.fromJson(resJson, Resposta.class);
 
@@ -185,10 +198,16 @@ public class TelaPrincipal extends JFrame {
                     
                     Requisicao req = new Requisicao("LISTAR_PROPRIO_USUARIO", token);
                     String reqJson = gson.toJson(req);
+                    
+                    System.out.println("=== REQUISIÇÃO ENVIADA (LISTAR_PROPRIO_USUARIO) ===");
                     System.out.println(reqJson);
+                    System.out.println("====================================================");
                     
                     String resJson = NetworkUtil.sendJson(socket, reqJson, gson);
-                    System.out.println("Recebido: " + resJson);
+                    
+                    System.out.println("=== RESPOSTA RECEBIDA (LISTAR_PROPRIO_USUARIO) ===");
+                    System.out.println(resJson);
+                    System.out.println("===================================================");
 
                     Login res = gson.fromJson(resJson, Login.class);
                     //Object usuario = res.getUsuario();
@@ -220,8 +239,16 @@ public class TelaPrincipal extends JFrame {
                 Requisicao req = new Requisicao("LOGOUT", token);
                 String reqJson = gson.toJson(req);
 
+                System.out.println("=== REQUISIÇÃO ENVIADA (LOGOUT) ===");
+                System.out.println(reqJson);
+                System.out.println("====================================");
+
                 String resJson = NetworkUtil.sendJson(socket, reqJson, gson);
-                System.out.println("Recebido: " + resJson);
+                
+                System.out.println("=== RESPOSTA RECEBIDA (LOGOUT) ===");
+                System.out.println(resJson);
+                System.out.println("===================================");
+                
                 Resposta res = gson.fromJson(resJson, Resposta.class);
                 if (res.getStatus().equals("200")) {
                     SessaoUsuario.getInstance().limparSessao();
@@ -250,7 +277,7 @@ public class TelaPrincipal extends JFrame {
     private void buscarDados() {
         String token = SessaoUsuario.getInstance().getToken();
 
-        Requisicao reqFilmes = new Requisicao("LISTAR_FILMES");
+        Requisicao reqFilmes = new Requisicao("LISTAR_FILMES", token);
         // Requisicao reqReviews = new Requisicao("LISTAR_REVIEWS_USUARIO");
         String jsonReqFilmes = gson.toJson(reqFilmes);
         // String jsonReqReviews = gson.toJson(reqReviews);
@@ -263,9 +290,16 @@ public class TelaPrincipal extends JFrame {
                 // outra começa.
                 // Para simplificar, vamos fazer uma requisição de cada vez.
 
+                System.out.println("=== REQUISIÇÃO ENVIADA (LISTAR_FILMES) ===");
+                System.out.println(jsonReqFilmes);
+                System.out.println("===========================================");
+
                 // Busca Filmes
                 String respostaJsonFilmes = NetworkUtil.sendJson(socket, jsonReqFilmes, gson);
-                System.out.println("Recebido: " + respostaJsonFilmes);
+                
+                System.out.println("=== RESPOSTA RECEBIDA (LISTAR_FILMES) ===");
+                System.out.println(respostaJsonFilmes);
+                System.out.println("==========================================");
                 RespostaFilmes respostaFilmes = gson.fromJson(respostaJsonFilmes, RespostaFilmes.class);
 
                 // Busca Reviews

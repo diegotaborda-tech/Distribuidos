@@ -80,9 +80,17 @@ public class TelaLogin extends JFrame {
 
         new Thread(() -> {
             try {
+                System.out.println("=== REQUISIÇÃO ENVIADA (CRIAR_USUARIO) ===");
+                System.out.println(jsonReq);
+                System.out.println("===========================================");
+                
                 // 1. Recebe a resposta como uma String pura
                 String respostaJson = NetworkUtil.sendJson(socket, jsonReq, gson);
-                System.out.println("Recebido: " + respostaJson);
+                
+                System.out.println("=== RESPOSTA RECEBIDA (CRIAR_USUARIO) ===");
+                System.out.println(respostaJson);
+                System.out.println("==========================================");
+                
                 // 2. Converte (cast) a String para o objeto Resposta usando Gson
                 Resposta resposta = gson.fromJson(respostaJson, Resposta.class);
 
@@ -118,9 +126,16 @@ public class TelaLogin extends JFrame {
 
         new Thread(() -> {
             try {
+                System.out.println("=== REQUISIÇÃO ENVIADA (LOGIN) ===");
+                System.out.println(jsonReq);
+                System.out.println("===================================");
+                
                 // 1. Recebe a resposta como uma String pura
                 String respostaJson = NetworkUtil.sendJson(socket, jsonReq, gson);
-                System.out.println("Recebido: " + respostaJson);
+                
+                System.out.println("=== RESPOSTA RECEBIDA (LOGIN) ===");
+                System.out.println(respostaJson);
+                System.out.println("==================================");
 
                 // 2. Converte (cast) a String para o objeto Resposta usando Gson
                 Resposta resposta = gson.fromJson(respostaJson, Resposta.class);

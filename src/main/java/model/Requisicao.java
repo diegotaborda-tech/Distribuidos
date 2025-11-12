@@ -7,6 +7,7 @@ public class Requisicao {
     private Object usuario;
     private Object review;
     private Object filme;
+    private String id;
 
 
 
@@ -18,6 +19,14 @@ public class Requisicao {
         this.operacao = operacao;
         this.token = token; 
     }
+    
+    // Construtor para operações com ID (como EXCLUIR_FILME)
+    public Requisicao(String operacao, String token, String id) {
+        this.operacao = operacao;
+        this.token = token;
+        this.id = id;
+    }
+    
     //User
     public Requisicao(String operacao, Object dados,String token,String tipo) {
         
@@ -83,5 +92,13 @@ public class Requisicao {
 
         public Object getReview() {
             return review;
+        }
+        
+        public String getId() {
+            return id;
+        }
+        
+        public void setId(String id) {
+            this.id = id;
         }
 }
